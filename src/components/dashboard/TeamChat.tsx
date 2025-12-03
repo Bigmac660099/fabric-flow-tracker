@@ -84,12 +84,12 @@ export function TeamChat() {
                   >
                     <Avatar className="h-8 w-8 shrink-0">
                       <AvatarFallback className="text-xs">
-                        {getInitials(msg.author_name)}
+                        {getInitials(msg.profile?.full_name || "U")}
                       </AvatarFallback>
                     </Avatar>
                     <div className={`flex flex-col ${isOwn ? "items-end" : ""}`}>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{msg.author_name}</span>
+                        <span>{msg.profile?.full_name || "User"}</span>
                         <span>{format(new Date(msg.created_at), "HH:mm")}</span>
                       </div>
                       <div

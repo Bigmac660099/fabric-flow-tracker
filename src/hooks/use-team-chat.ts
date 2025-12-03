@@ -7,7 +7,10 @@ export interface ChatMessage {
   user_id: string;
   message: string;
   created_at: string;
-  author_name: string;
+  profile?: {
+    full_name: string;
+    email: string;
+  };
 }
 
 export function useTeamChat() {
@@ -18,13 +21,26 @@ export function useTeamChat() {
   const fetchMessages = useCallback(async () => {
     const { data, error } = await supabase
       .from("chat_messages")
-      .select("id, user_id, message, created_at, author_name")
+      .select("*")
       .order("created_at", { ascending: true });
 
     if (error) {
       console.error("Error fetching messages:", error);
     } else {
-      setMessages(data || []);
+      // Fetch profiles separately
+      const userIds = [...new Set(data?.map((m) => m.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", userIds);
+
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]));
+      const messagesWithProfiles = (data || []).map((msg) => ({
+        ...msg,
+        profile: profileMap.get(msg.user_id),
+      }));
+
+      setMessages(messagesWithProfiles);
     }
     setLoading(false);
   }, []);
