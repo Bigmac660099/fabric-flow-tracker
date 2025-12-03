@@ -1,7 +1,7 @@
-import { ProductionTracker } from "@/components/production/ProductionTracker";
+import { Navigate } from "react-router-dom";
 
 const Index = () => {
-  return <ProductionTracker />;
+  return <Navigate to="/dashboard" replace />;
 };
 
 export default Index;
