@@ -13,10 +13,21 @@ export interface Employee {
 export function useEmployees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isAdmin } = useAuthContext();
+  const { isAdmin, user } = useAuthContext();
 
   const fetchEmployees = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
+
+    if (!isAdmin) {
+      setEmployees([]);
+      setLoading(false);
+      return;
+    }
 
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
@@ -49,7 +60,7 @@ export function useEmployees() {
 
     setEmployees(employeesData);
     setLoading(false);
-  }, []);
+  }, [isAdmin, user]);
 
   useEffect(() => {
     fetchEmployees();

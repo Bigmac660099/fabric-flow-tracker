@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WorkItem, ProgressStage } from "@/hooks/use-work-items";
 import { Employee } from "@/hooks/use-employees";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -24,10 +25,13 @@ const stageBadgeColors: Record<ProgressStage, string> = {
 };
 
 export function WorkItemsTable({ items, employees, isAdmin, onEdit, onDelete }: WorkItemsTableProps) {
+  const { user, profile } = useAuthContext();
+
   const getEmployeeName = (userId: string | null) => {
     if (!userId) return "Unassigned";
+    if (userId === user?.id) return profile?.full_name || "You";
     const emp = employees.find((e) => e.user_id === userId);
-    return emp?.full_name || "Unknown";
+    return emp?.full_name || "Assigned";
   };
 
   if (items.length === 0) {
