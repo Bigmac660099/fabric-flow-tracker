@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Package, LayoutDashboard, ClipboardList, Settings, LogOut, Shield } from "lucide-react";
 
 interface AppLayoutProps {
@@ -96,6 +97,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 Admin
               </span>
             )}
+            <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -110,7 +112,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <p className="text-xs text-muted-foreground">{profile?.email}</p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>
