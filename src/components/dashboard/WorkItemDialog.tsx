@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { WorkItem, PROGRESS_STAGES } from "@/hooks/use-work-items";
+import { Switch } from "@/components/ui/switch";
+import { WorkItem, PROGRESS_STAGES, ProgressStage } from "@/hooks/use-work-items";
 import { Employee } from "@/hooks/use-employees";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock, Calendar } from "lucide-react";
+import { format } from "date-fns";
 
 interface WorkItemDialogProps {
   open: boolean;
@@ -17,6 +19,15 @@ interface WorkItemDialogProps {
   isAdmin: boolean;
   onSave: (data: Partial<WorkItem>) => Promise<void>;
 }
+
+const stageToDateField: Record<ProgressStage, keyof WorkItem> = {
+  Cutting: "cutting_date",
+  Printing: "printing_date",
+  Sewing: "sewing_date",
+  Finishing: "finishing_date",
+  Packing: "packing_date",
+  Delivery: "delivery_date",
+};
 
 export function WorkItemDialog({
   open,
@@ -34,6 +45,8 @@ export function WorkItemDialog({
     progress_stage: "Cutting",
     notes: "",
     assigned_employee_id: null,
+    is_locked: false,
+    locked_to_user_id: null,
   });
 
   useEffect(() => {
@@ -47,6 +60,8 @@ export function WorkItemDialog({
         progress_stage: "Cutting",
         notes: "",
         assigned_employee_id: null,
+        is_locked: false,
+        locked_to_user_id: null,
       });
     }
   }, [item, open]);
@@ -59,12 +74,26 @@ export function WorkItemDialog({
     onOpenChange(false);
   };
 
+  const handleMarkStageComplete = () => {
+    const currentStage = formData.progress_stage as ProgressStage;
+    const dateField = stageToDateField[currentStage];
+    if (dateField) {
+      setFormData({
+        ...formData,
+        [dateField]: new Date().toISOString(),
+      });
+    }
+  };
+
   const isEditMode = !!item;
   const canEditAllFields = isAdmin;
+  const currentStage = formData.progress_stage as ProgressStage;
+  const currentStageDateField = stageToDateField[currentStage];
+  const isCurrentStageComplete = currentStageDateField && formData[currentStageDateField];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditMode ? "Edit Work Item" : "Create Work Item"}</DialogTitle>
         </DialogHeader>
@@ -124,31 +153,103 @@ export function WorkItemDialog({
             </Select>
           </div>
 
-          {canEditAllFields && (
-            <div className="space-y-2">
-              <Label htmlFor="assigned_employee">Assigned Employee</Label>
-              <Select
-                value={formData.assigned_employee_id || "unassigned"}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    assigned_employee_id: value === "unassigned" ? null : value,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select employee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {employees.map((emp) => (
-                    <SelectItem key={emp.user_id} value={emp.user_id}>
-                      {emp.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Stage completion button */}
+          {isEditMode && (
+            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  {isCurrentStageComplete
+                    ? `${currentStage} completed: ${format(new Date(formData[currentStageDateField] as string), "MMM d, yyyy")}`
+                    : `Mark ${currentStage} as complete`}
+                </span>
+              </div>
+              {!isCurrentStageComplete && (
+                <Button type="button" size="sm" variant="outline" onClick={handleMarkStageComplete}>
+                  Complete
+                </Button>
+              )}
             </div>
+          )}
+
+          {canEditAllFields && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="assigned_employee">Assigned Employee</Label>
+                <Select
+                  value={formData.assigned_employee_id || "unassigned"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      assigned_employee_id: value === "unassigned" ? null : value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select employee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {employees.map((emp) => (
+                      <SelectItem key={emp.user_id} value={emp.user_id}>
+                        {emp.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Task locking section */}
+              <div className="space-y-3 p-3 border rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                    <Label htmlFor="is_locked" className="cursor-pointer">Lock Task</Label>
+                  </div>
+                  <Switch
+                    id="is_locked"
+                    checked={formData.is_locked || false}
+                    onCheckedChange={(checked) =>
+                      setFormData({
+                        ...formData,
+                        is_locked: checked,
+                        locked_to_user_id: checked ? formData.locked_to_user_id : null,
+                      })
+                    }
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  When locked, only the assigned user can access this task.
+                </p>
+
+                {formData.is_locked && (
+                  <div className="space-y-2">
+                    <Label htmlFor="locked_to_user">Lock to User</Label>
+                    <Select
+                      value={formData.locked_to_user_id || "none"}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          locked_to_user_id: value === "none" ? null : value,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select user to lock to" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Same as assigned</SelectItem>
+                        {employees.map((emp) => (
+                          <SelectItem key={emp.user_id} value={emp.user_id}>
+                            {emp.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           <div className="space-y-2">

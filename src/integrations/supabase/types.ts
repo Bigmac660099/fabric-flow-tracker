@@ -90,6 +90,8 @@ export type Database = {
           delivery_date: string | null
           finishing_date: string | null
           id: string
+          is_locked: boolean
+          locked_to_user_id: string | null
           notes: string | null
           order_id: string
           packing_date: string | null
@@ -108,6 +110,8 @@ export type Database = {
           delivery_date?: string | null
           finishing_date?: string | null
           id?: string
+          is_locked?: boolean
+          locked_to_user_id?: string | null
           notes?: string | null
           order_id: string
           packing_date?: string | null
@@ -126,6 +130,8 @@ export type Database = {
           delivery_date?: string | null
           finishing_date?: string | null
           id?: string
+          is_locked?: boolean
+          locked_to_user_id?: string | null
           notes?: string | null
           order_id?: string
           packing_date?: string | null

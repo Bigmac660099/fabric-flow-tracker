@@ -16,6 +16,8 @@ export interface WorkItem {
   finishing_date: string | null;
   packing_date: string | null;
   delivery_date: string | null;
+  is_locked: boolean;
+  locked_to_user_id: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -68,6 +70,8 @@ export function useWorkItems() {
       progress_stage: item.progress_stage || "Cutting",
       notes: item.notes || null,
       assigned_employee_id: item.assigned_employee_id || null,
+      is_locked: item.is_locked || false,
+      locked_to_user_id: item.locked_to_user_id || null,
       created_by: user.id,
     }]);
 
