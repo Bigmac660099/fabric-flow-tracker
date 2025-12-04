@@ -10,12 +10,23 @@ export interface Employee {
   role: AppRole;
 }
 
+/**
+ * Admin-only hook to fetch full employee data including emails.
+ * Non-admins will receive an empty array (enforced by RLS).
+ */
 export function useEmployees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const { isAdmin } = useAuthContext();
 
   const fetchEmployees = useCallback(async () => {
+    // Only admins should fetch employees - RLS enforces this at DB level too
+    if (!isAdmin) {
+      setEmployees([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     const { data: profiles, error: profilesError } = await supabase
@@ -49,7 +60,7 @@ export function useEmployees() {
 
     setEmployees(employeesData);
     setLoading(false);
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     fetchEmployees();
