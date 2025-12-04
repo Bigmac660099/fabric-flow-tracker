@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StageCard } from "@/components/dashboard/StageCard";
 import { WorkItemsTable } from "@/components/dashboard/WorkItemsTable";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useWorkItems, WorkItem, PROGRESS_STAGES } from "@/hooks/use-work-items";
 import { useEmployees } from "@/hooks/use-employees";
+import { useEmployeeNames } from "@/hooks/use-employee-names";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Loader2, TrendingUp } from "lucide-react";
@@ -19,9 +20,16 @@ export default function Dashboard() {
 
   const { workItems, loading, createWorkItem, updateWorkItem, deleteWorkItem, getStageStats } =
     useWorkItems();
-  const { employees } = useEmployees();
+  const { employees } = useEmployees(); // Only returns data for admins
   const { isAdmin, profile } = useAuthContext();
   const { toast } = useToast();
+
+  // Extract assigned employee IDs for secure name lookup (for non-admins)
+  const assignedEmployeeIds = useMemo(
+    () => workItems.map((item) => item.assigned_employee_id).filter(Boolean) as string[],
+    [workItems]
+  );
+  const { getEmployeeName } = useEmployeeNames(assignedEmployeeIds);
 
   const stageStats = getStageStats();
   const totalItems = workItems.length;
@@ -152,7 +160,7 @@ export default function Dashboard() {
               <CardContent>
                 <WorkItemsTable
                   items={filteredItems.slice(0, 10)}
-                  employees={employees}
+                  getEmployeeName={getEmployeeName}
                   isAdmin={isAdmin}
                   onEdit={handleEdit}
                   onDelete={handleDelete}

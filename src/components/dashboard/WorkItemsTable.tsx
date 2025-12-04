@@ -2,13 +2,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WorkItem, ProgressStage } from "@/hooks/use-work-items";
-import { Employee } from "@/hooks/use-employees";
 import { Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 interface WorkItemsTableProps {
   items: WorkItem[];
-  employees: Employee[];
+  getEmployeeName: (userId: string | null) => string;
   isAdmin: boolean;
   onEdit: (item: WorkItem) => void;
   onDelete: (id: string) => void;
@@ -23,13 +22,7 @@ const stageBadgeColors: Record<ProgressStage, string> = {
   Delivery: "bg-cyan-100 text-cyan-800",
 };
 
-export function WorkItemsTable({ items, employees, isAdmin, onEdit, onDelete }: WorkItemsTableProps) {
-  const getEmployeeName = (userId: string | null) => {
-    if (!userId) return "Unassigned";
-    const emp = employees.find((e) => e.user_id === userId);
-    return emp?.full_name || "Unknown";
-  };
-
+export function WorkItemsTable({ items, getEmployeeName, isAdmin, onEdit, onDelete }: WorkItemsTableProps) {
   if (items.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">

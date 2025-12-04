@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WorkItemsTable } from "@/components/dashboard/WorkItemsTable";
 import { WorkItemDialog } from "@/components/dashboard/WorkItemDialog";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkItems, WorkItem, PROGRESS_STAGES } from "@/hooks/use-work-items";
 import { useEmployees } from "@/hooks/use-employees";
+import { useEmployeeNames } from "@/hooks/use-employee-names";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Loader2, Search, ClipboardList, Filter } from "lucide-react";
@@ -19,9 +20,16 @@ export default function WorkItems() {
   const [filterStage, setFilterStage] = useState<string>("all");
 
   const { workItems, loading, createWorkItem, updateWorkItem, deleteWorkItem } = useWorkItems();
-  const { employees } = useEmployees();
+  const { employees } = useEmployees(); // Only returns data for admins
   const { isAdmin } = useAuthContext();
   const { toast } = useToast();
+
+  // Extract assigned employee IDs for secure name lookup (for non-admins)
+  const assignedEmployeeIds = useMemo(
+    () => workItems.map((item) => item.assigned_employee_id).filter(Boolean) as string[],
+    [workItems]
+  );
+  const { getEmployeeName } = useEmployeeNames(assignedEmployeeIds);
 
   const filteredItems = workItems.filter((item) => {
     const matchesSearch =
@@ -147,7 +155,7 @@ export default function WorkItems() {
           <CardContent>
             <WorkItemsTable
               items={filteredItems}
-              employees={employees}
+              getEmployeeName={getEmployeeName}
               isAdmin={isAdmin}
               onEdit={handleEdit}
               onDelete={handleDelete}
