@@ -16,13 +16,14 @@ export function TeamChat() {
   const { messages, loading, sendMessage, deleteMessage, isAdmin } = useTeamChat();
   const { user } = useAuthContext();
   const { toast } = useToast();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to bottom when messages change or on initial load
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!loading && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "auto" });
     }
-  }, [messages]);
+  }, [messages, loading]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +65,7 @@ export function TeamChat() {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col overflow-hidden p-4 pt-0">
-        <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
+        <ScrollArea className="flex-1 pr-4">
           {loading ? (
             <div className="flex justify-center py-4">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -116,6 +117,7 @@ export function TeamChat() {
                   </div>
                 );
               })}
+              <div ref={messagesEndRef} />
             </div>
           )}
         </ScrollArea>
