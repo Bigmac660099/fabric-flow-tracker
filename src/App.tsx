@@ -11,7 +11,7 @@ import WorkItems from "./pages/WorkItems";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient(); // Rebuild trigger
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
