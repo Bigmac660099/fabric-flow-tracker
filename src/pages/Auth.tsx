@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Package, Mail, CheckCircle, KeyRound } from "lucide-react";
+import { Loader2, Package, Mail, KeyRound } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -24,7 +24,6 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const { signIn, signUp, user, loading } = useAuthContext();
@@ -108,12 +107,11 @@ export default function Auth() {
         variant: "destructive",
       });
     } else {
-      // Show verification message instead of redirecting
-      setShowVerificationMessage(true);
       toast({
-        title: "Verification email sent!",
-        description: "Please check your email to verify your account.",
+        title: "Account created successfully!",
+        description: "Welcome! You're now signed in.",
       });
+      navigate("/dashboard");
     }
   };
 
@@ -149,53 +147,6 @@ export default function Auth() {
     );
   }
 
-  // Show verification message after signup
-  if (showVerificationMessage) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
-        </div>
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Mail className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription className="text-base mt-2">
-              We've sent a verification link to <strong>{email}</strong>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-muted rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span>Open the email we just sent</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span>Click the verification link</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span>Return here to sign in</span>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground text-center">
-              Didn't receive the email? Check your spam folder or try signing up again.
-            </p>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setShowVerificationMessage(false)}
-            >
-              Back to Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   // Show password reset form
   if (showResetPassword) {

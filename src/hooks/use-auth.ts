@@ -10,6 +10,8 @@ interface AuthState {
   role: AppRole | null;
   profile: { full_name: string; email: string } | null;
   loading: boolean;
+  otpSent?: boolean;
+  pendingEmail?: string;
 }
 
 export function useAuth() {
@@ -91,12 +93,10 @@ export function useAuth() {
   }, [fetchUserData]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: { full_name: fullName },
       },
     });
